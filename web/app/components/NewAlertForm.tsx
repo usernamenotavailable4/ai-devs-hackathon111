@@ -19,27 +19,27 @@ const DEMO_CUSTOMERS = [
     tag: "Unknown Payee", tagColor: "#f59e0b",
   },
   {
-    customer_id: "CUST-1015", account_id: "ACC-5015", flagged_transaction_id: "TXN-000461",
+    customer_id: "CUST-1005", account_id: "ACC-5005", flagged_transaction_id: "TXN-000461",
     narrative: "Login from unrecognized device in a foreign country followed immediately by a $47,000 outbound wire. Customer has never transacted internationally before.",
     tag: "Account Takeover", tagColor: "#dc2626",
   },
   {
-    customer_id: "CUST-1021", account_id: "ACC-5021", flagged_transaction_id: "TXN-000468",
+    customer_id: "CUST-1006", account_id: "ACC-5006", flagged_transaction_id: "TXN-000468",
     narrative: "Account received 14 inbound transfers from 9 different senders totalling $82,000 over 3 days, then forwarded the full balance to a single beneficiary within hours — classic money mule behavior.",
     tag: "Money Mule", tagColor: "#7c3aed",
   },
   {
-    customer_id: "CUST-1033", account_id: "ACC-5033", flagged_transaction_id: "TXN-000477",
+    customer_id: "CUST-1007", account_id: "ACC-5007", flagged_transaction_id: "TXN-000477",
     narrative: "12 card-not-present transactions ranging $1–$5 across different merchants in a 20-minute window — consistent with automated card testing before high-value exploitation.",
     tag: "Card Testing", tagColor: "#0891b2",
   },
   {
-    customer_id: "CUST-1041", account_id: "ACC-5041", flagged_transaction_id: "TXN-000489",
+    customer_id: "CUST-1008", account_id: "ACC-5008", flagged_transaction_id: "TXN-000489",
     narrative: "Finance team wired $138,000 to a vendor bank account added 48 hours prior following a spoofed CEO email requesting urgent payment. The beneficiary account was opened 6 days ago.",
     tag: "BEC Fraud", tagColor: "#be123c",
   },
   {
-    customer_id: "CUST-1058", account_id: "ACC-5058", flagged_transaction_id: "TXN-000501",
+    customer_id: "CUST-1010", account_id: "ACC-5010", flagged_transaction_id: "TXN-000501",
     narrative: "Elderly customer (82) made seven ATM cash withdrawals totalling $34,000 over 10 days following contact with an individual claiming to be a lottery official demanding taxes be paid upfront.",
     tag: "Elder Fraud", tagColor: "#b45309",
   },

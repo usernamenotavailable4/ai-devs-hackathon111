@@ -14,8 +14,11 @@ Precise, conservative, regulator-friendly. Prefer MEDIUM/HIGH risk ratings when 
 Example input: KYC record fully verified, no sanctions hits. Example output: identity_score=95, kyc_risk_rating="LOW", sanctions_status="NO_HIT".`;
 
 export async function kycRetriever(customerId: string) {
-  const kycRecord = findKycDoc(customerId);
-  if (!kycRecord) throw new Error(`No KYC record for ${customerId}`);
+  const kycRecord = findKycDoc(customerId) || {
+    customer_id: customerId, full_name: "REDACTED", document_status: "PENDING",
+    id_type: "UNKNOWN", kyc_risk_rating: "HIGH", country_of_birth: "UNKNOWN",
+    nationality: "UNKNOWN", pep_status: false, notes: "No KYC record on file — thin file, elevated risk.",
+  };
 
   const screening = screenName(kycRecord.full_name);
 
