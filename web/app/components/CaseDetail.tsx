@@ -25,16 +25,16 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
   const [submitting, setSubmitting] = useState(false);
   const evidenceRef = useRef<HTMLDivElement>(null);
 
-  const load = () => {
-    api.getCase(caseId).then(setDetail).catch(() => setDetail(null));
+  const load = (isInitial = false) => {
+    api.getCase(caseId).then(setDetail).catch(() => { if (isInitial) setDetail(null); });
   };
 
   useEffect(() => {
     setScrolledToBottom(false);
     setDemasked(false);
     setNotes("");
-    load();
-    const interval = setInterval(load, 3000);
+    load(true);
+    const interval = setInterval(() => load(false), 3000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
