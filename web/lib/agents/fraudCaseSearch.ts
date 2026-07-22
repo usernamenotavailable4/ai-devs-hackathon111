@@ -2,6 +2,7 @@ import { generateStructured } from "../gemini";
 import { embed, cosineSimilarity } from "../embeddings";
 import { historicalFraudCases } from "../fixtures";
 import { listMemoryCases } from "../db";
+import { HAS_QDRANT, searchSimilar } from "../qdrant";
 
 const SYSTEM_PROMPT = `### Capacity and Role
 You are the Fraud Case Search Agent. You are given the current case's narrative plus a list of semantically/metadata-matched historical cases.
@@ -24,38 +25,51 @@ function amountBracket(amount: number) {
 export async function fraudCaseSearch(caseId: string, narrative: string, metadataFilter: Record<string, string> = {}) {
   const queryVector = await embed(narrative || caseId);
 
-  const corpus = [
-    ...(historicalFraudCases as any[]).map((c) => ({
-      case_id: c.case_id, narrative: c.narrative, fraud_type: c.fraud_type,
-      amount_bracket: amountBracket(c.amount), channel: c.channel, geography: c.geography,
-      resolution_date: c.resolution_date, analyst_verdict: c.analyst_verdict,
-    })),
-    ...(await listMemoryCases()).map((c: any) => ({
-      case_id: c.case_id, narrative: c.narrative, fraud_type: c.fraud_type,
-      amount_bracket: c.amount_bracket, channel: c.channel, geography: c.geography,
-      resolution_date: c.resolution_date, analyst_verdict: c.analyst_verdict, embedding: c.embedding,
-    })),
-  ];
+  let hits: any[];
 
-  const filtered = corpus.filter((c) =>
-    Object.entries(metadataFilter).every(([k, v]) => !v || (c as any)[k] === v)
-  );
-  const pool = filtered.length ? filtered : corpus;
-
-  const scored = await Promise.all(
-    pool.map(async (c: any) => ({
-      ...c,
-      similarity: cosineSimilarity(queryVector, c.embedding ? (typeof c.embedding === "string" ? JSON.parse(c.embedding) : c.embedding) : await embed(c.narrative)),
-    }))
-  );
-  scored.sort((a, b) => b.similarity - a.similarity);
-  const hits = scored.slice(0, 5).map((h) => ({
-    case_id: h.case_id, similarity: Math.round(h.similarity * 1000) / 1000,
-    fraud_type: h.fraud_type, analyst_verdict: h.analyst_verdict, resolution_date: h.resolution_date,
-  }));
+  if (HAS_QDRANT) {
+    // --- Live path: Qdrant vector search ---
+    const results = await searchSimilar(queryVector, 5, metadataFilter);
+    hits = results.map((r: any) => ({
+      case_id: r.case_id,
+      similarity: Math.round((r.similarity ?? 0) * 1000) / 1000,
+      fraud_type: r.fraud_type,
+      analyst_verdict: r.analyst_verdict,
+      resolution_date: r.resolution_date,
+    }));
+  } else {
+    // --- Fallback: in-memory cosine similarity over fixtures + memory ---
+    const corpus = [
+      ...(historicalFraudCases as any[]).map((c) => ({
+        case_id: c.case_id, narrative: c.narrative, fraud_type: c.fraud_type,
+        amount_bracket: amountBracket(c.amount), channel: c.channel, geography: c.geography,
+        resolution_date: c.resolution_date, analyst_verdict: c.analyst_verdict,
+      })),
+      ...(await listMemoryCases()).map((c: any) => ({
+        case_id: c.case_id, narrative: c.narrative, fraud_type: c.fraud_type,
+        amount_bracket: c.amount_bracket, channel: c.channel, geography: c.geography,
+        resolution_date: c.resolution_date, analyst_verdict: c.analyst_verdict, embedding: c.embedding,
+      })),
+    ];
+    const filtered = corpus.filter((c) =>
+      Object.entries(metadataFilter).every(([k, v]) => !v || (c as any)[k] === v)
+    );
+    const pool = filtered.length ? filtered : corpus;
+    const scored = await Promise.all(
+      pool.map(async (c: any) => ({
+        ...c,
+        similarity: cosineSimilarity(queryVector, c.embedding ? (typeof c.embedding === "string" ? JSON.parse(c.embedding) : c.embedding) : await embed(c.narrative)),
+      }))
+    );
+    scored.sort((a, b) => b.similarity - a.similarity);
+    hits = scored.slice(0, 5).map((h) => ({
+      case_id: h.case_id, similarity: Math.round(h.similarity * 1000) / 1000,
+      fraud_type: h.fraud_type, analyst_verdict: h.analyst_verdict, resolution_date: h.resolution_date,
+    }));
+  }
 
   const mockFactory = () => {
-    const evidence = hits.map((h) => ({ evidence_id: h.case_id, source: "Fraud Case Memory", detail: `${h.fraud_type} case, ${Math.round(h.similarity * 100)}% similar, verdict=${h.analyst_verdict}` }));
+    const evidence = hits.map((h) => ({ evidence_id: h.case_id, source: "Fraud Case Memory (Qdrant)", detail: `${h.fraud_type} case, ${Math.round(h.similarity * 100)}% similar, verdict=${h.analyst_verdict}` }));
     const top = hits[0];
     const notes = top
       ? `Most similar precedent: ${top.case_id} (${Math.round(top.similarity * 100)}% similar, ${top.fraud_type}).`

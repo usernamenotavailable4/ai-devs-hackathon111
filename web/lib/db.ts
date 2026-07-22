@@ -20,10 +20,16 @@ import { sql } from "@vercel/postgres";
 export const HAS_POSTGRES = !!process.env.POSTGRES_URL;
 
 // ---- in-memory fallback (dev only, single-process) ----
+// Stored on globalThis so all Next.js route-handler module instances share
+// the same Map — module-level vars get separate instances per route bundle.
 type MemCase = Record<string, any>;
-const memCases = new Map<string, MemCase>();
-const memAudit: MemCase[] = [];
-const memMemory: MemCase[] = []; // resolved-case vector memory write-back
+declare global { var _fi_cases: Map<string, MemCase>; var _fi_audit: MemCase[]; var _fi_memory: MemCase[]; }
+if (!global._fi_cases)  global._fi_cases  = new Map<string, MemCase>();
+if (!global._fi_audit)  global._fi_audit  = [];
+if (!global._fi_memory) global._fi_memory = [];
+const memCases  = global._fi_cases;
+const memAudit  = global._fi_audit;
+const memMemory = global._fi_memory;
 
 let initialized = false;
 
@@ -219,6 +225,10 @@ export async function writeBackResolvedCase(entry: {
   case_id: string; narrative: string; embedding: number[]; fraud_type: string;
   amount_bracket: string; channel: string; geography: string; resolution_date: string; analyst_verdict: string;
 }) {
+  // Always write to Qdrant when available (primary vector store)
+  const { upsertCase, HAS_QDRANT } = await import("./qdrant");
+  if (HAS_QDRANT) await upsertCase(entry);
+
   if (HAS_POSTGRES) {
     await ensureSchema();
     await sql`
@@ -226,7 +236,7 @@ export async function writeBackResolvedCase(entry: {
       VALUES (${entry.case_id}, ${entry.narrative}, ${JSON.stringify(entry.embedding)}, ${entry.fraud_type},
               ${entry.amount_bracket}, ${entry.channel}, ${entry.geography}, ${entry.resolution_date}, ${entry.analyst_verdict});
     `;
-  } else {
+  } else if (!HAS_QDRANT) {
     memMemory.push({ ...entry, id: memMemory.length + 1 });
   }
 }

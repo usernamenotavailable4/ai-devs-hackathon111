@@ -286,23 +286,28 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
                   background: "var(--surface-2)",
                 }}
               >
-                {report.evidence_citations.map((e: any, i: number) => (
-                  <div key={i} style={{
-                    padding: "10px 14px",
-                    borderBottom: i < report.evidence_citations.length - 1 ? "1px solid var(--border-dim)" : "none",
-                    display: "flex", alignItems: "flex-start", gap: "10px",
-                  }}>
-                    <span style={{
-                      fontFamily: "JetBrains Mono, monospace", fontSize: "11px",
-                      color: "var(--info)", flexShrink: 0, paddingTop: "1px",
-                      minWidth: "120px",
-                    }}>{e.evidence_id}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "2px" }}>{e.source}</div>
-                      <div style={{ fontSize: "12px", color: "var(--text)" }}>{e.detail}</div>
+                {report.evidence_citations.map((e: any, i: number) => {
+                  const id = typeof e === "string" ? e : (e.evidence_id ?? e.id ?? JSON.stringify(e));
+                  const src = typeof e === "object" ? e.source : null;
+                  const det = typeof e === "object" ? e.detail : null;
+                  return (
+                    <div key={i} style={{
+                      padding: "10px 14px",
+                      borderBottom: i < report.evidence_citations.length - 1 ? "1px solid var(--border-dim)" : "none",
+                      display: "flex", alignItems: "flex-start", gap: "10px",
+                    }}>
+                      <span style={{
+                        fontFamily: "JetBrains Mono, monospace", fontSize: "11px",
+                        color: "var(--info)", flexShrink: 0, paddingTop: "1px",
+                        minWidth: "120px",
+                      }}>{id}</span>
+                      <div style={{ flex: 1 }}>
+                        {src && <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "2px" }}>{src}</div>}
+                        {det && <div style={{ fontSize: "12px", color: "var(--text)" }}>{det}</div>}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
