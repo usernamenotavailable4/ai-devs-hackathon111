@@ -77,6 +77,8 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
   const canDecide = detail.status === "PENDING_REVIEW";
   const risk = report ? riskLabel(report.fraud_probability) : null;
   const actionStyle = report ? (ACTION_COLORS[report.recommended_action] || { color: "var(--muted-2)", bg: "transparent" }) : null;
+  const isFraud = detail.analyst_verdict === "CONFIRMED_FRAUD";
+  const isResolved = !!detail.analyst_verdict;
 
   return (
     <div style={{ height: "100%", overflowY: "auto", display: "flex", flexDirection: "column" }}>
@@ -318,80 +320,119 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
               </button>
             </div>
 
-            {/* Verdict section */}
-            <div style={{
-              padding: "16px", borderRadius: "10px",
-              border: `1px solid ${canDecide ? "var(--border)" : "var(--border-dim)"}`,
-              background: "var(--surface-2)",
-              display: "flex", flexDirection: "column", gap: "12px",
-            }}>
-              <div style={{ fontSize: "11px", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Analyst Decision
-              </div>
-
-              <textarea
-                style={{
-                  width: "100%", boxSizing: "border-box",
-                  background: "var(--surface)", border: "1px solid var(--border-dim)",
-                  borderRadius: "8px", padding: "10px 12px",
-                  fontSize: "13px", color: "var(--text)", resize: "none",
-                  fontFamily: "Inter, sans-serif", lineHeight: "1.5",
-                }}
-                rows={2}
-                placeholder="Analyst notes (optional)…"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                disabled={detail.status !== "PENDING_REVIEW"}
-              />
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  disabled={!canDecide || submitting}
-                  onClick={() => submitVerdict("CONFIRMED_FRAUD")}
-                  style={{
-                    flex: 1, padding: "11px",
-                    borderRadius: "8px", border: "1px solid rgba(239,68,68,0.35)",
-                    background: canDecide ? "rgba(239,68,68,0.12)" : "var(--surface-2)",
-                    color: canDecide ? "#ef4444" : "var(--muted)",
-                    fontWeight: 600, fontSize: "13px",
-                    cursor: canDecide ? "pointer" : "not-allowed",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.22)"; }}
-                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.12)"; }}
-                >
-                  ✕ Confirm Fraud
-                </button>
-                <button
-                  disabled={!canDecide || submitting}
-                  onClick={() => submitVerdict("FALSE_POSITIVE")}
-                  style={{
-                    flex: 1, padding: "11px",
-                    borderRadius: "8px", border: "1px solid rgba(16,185,129,0.35)",
-                    background: canDecide ? "rgba(16,185,129,0.12)" : "var(--surface-2)",
-                    color: canDecide ? "#10b981" : "var(--muted)",
-                    fontWeight: 600, fontSize: "13px",
-                    cursor: canDecide ? "pointer" : "not-allowed",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.22)"; }}
-                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)"; }}
-                >
-                  ✓ False Positive
-                </button>
-              </div>
-
-
-              {detail.analyst_verdict && (
+            {/* Verdict / Completion */}
+            {isResolved ? (
+              <div style={{
+                padding: "24px", borderRadius: "12px",
+                border: `1px solid ${isFraud ? "rgba(239,68,68,0.3)" : "rgba(16,185,129,0.3)"}`,
+                background: isFraud ? "rgba(239,68,68,0.06)" : "rgba(16,185,129,0.06)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", textAlign: "center",
+              }}>
                 <div style={{
-                  padding: "10px 12px", borderRadius: "8px",
-                  background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",
-                  fontSize: "12px", color: "#10b981",
+                  width: "56px", height: "56px", borderRadius: "50%",
+                  background: isFraud ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)",
+                  border: `2px solid ${isFraud ? "#ef4444" : "#10b981"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px",
                 }}>
-                  ✓ Resolved as <strong>{detail.analyst_verdict}</strong> — written to fraud case memory for future retrieval.
+                  {isFraud ? "🚨" : "✅"}
                 </div>
-              )}
-            </div>
+                <div>
+                  <div style={{ fontSize: "16px", fontWeight: 700, color: isFraud ? "#ef4444" : "#10b981", marginBottom: "4px" }}>
+                    {isFraud ? "Confirmed Fraud" : "Cleared — False Positive"}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                    {detail.case_id} · {detail.customer_id} · Risk score {report?.fraud_probability}%
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", width: "100%" }}>
+                  {[
+                    { label: "Audit Logged", icon: "🔒", desc: "Hash-chained entry added" },
+                    { label: "Qdrant Updated", icon: "🧠", desc: "Case written to memory" },
+                    { label: "AI Trained", icon: "⚡", desc: "Used for future searches" },
+                  ].map((item) => (
+                    <div key={item.label} style={{
+                      padding: "10px 8px", borderRadius: "8px",
+                      background: "var(--surface)", border: "1px solid var(--border)",
+                    }}>
+                      <div style={{ fontSize: "18px", marginBottom: "4px" }}>{item.icon}</div>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text)", marginBottom: "2px" }}>{item.label}</div>
+                      <div style={{ fontSize: "10px", color: "var(--muted)" }}>{item.desc}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={onResolved}
+                  style={{
+                    padding: "10px 24px", borderRadius: "8px",
+                    border: "1px solid var(--border)", background: "var(--surface)",
+                    color: "var(--text)", fontWeight: 600, fontSize: "13px",
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
+                >
+                  ← Back to Cases
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                padding: "16px", borderRadius: "10px",
+                border: "1px solid var(--border-dim)", background: "var(--surface-2)",
+                display: "flex", flexDirection: "column", gap: "12px",
+              }}>
+                <div style={{ fontSize: "11px", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Analyst Decision
+                </div>
+                <textarea
+                  style={{
+                    width: "100%", boxSizing: "border-box",
+                    background: "var(--surface)", border: "1px solid var(--border-dim)",
+                    borderRadius: "8px", padding: "10px 12px",
+                    fontSize: "13px", color: "var(--text)", resize: "none",
+                    fontFamily: "Inter, sans-serif", lineHeight: "1.5",
+                  }}
+                  rows={2}
+                  placeholder="Analyst notes (optional)…"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={!canDecide}
+                />
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    disabled={!canDecide || submitting}
+                    onClick={() => submitVerdict("CONFIRMED_FRAUD")}
+                    style={{
+                      flex: 1, padding: "11px", borderRadius: "8px",
+                      border: "1px solid rgba(239,68,68,0.35)",
+                      background: canDecide ? "rgba(239,68,68,0.12)" : "var(--surface-2)",
+                      color: canDecide ? "#ef4444" : "var(--muted)",
+                      fontWeight: 600, fontSize: "13px",
+                      cursor: canDecide ? "pointer" : "not-allowed", transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.22)"; }}
+                    onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.12)"; }}
+                  >
+                    {submitting ? "Processing…" : "✕ Confirm Fraud"}
+                  </button>
+                  <button
+                    disabled={!canDecide || submitting}
+                    onClick={() => submitVerdict("FALSE_POSITIVE")}
+                    style={{
+                      flex: 1, padding: "11px", borderRadius: "8px",
+                      border: "1px solid rgba(16,185,129,0.35)",
+                      background: canDecide ? "rgba(16,185,129,0.12)" : "var(--surface-2)",
+                      color: canDecide ? "#10b981" : "var(--muted)",
+                      fontWeight: 600, fontSize: "13px",
+                      cursor: canDecide ? "pointer" : "not-allowed", transition: "all 0.15s",
+                    }}
+                    onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.22)"; }}
+                    onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)"; }}
+                  >
+                    {submitting ? "Processing…" : "✓ False Positive"}
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

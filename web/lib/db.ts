@@ -23,13 +23,44 @@ export const HAS_POSTGRES = !!process.env.POSTGRES_URL;
 // Stored on globalThis so all Next.js route-handler module instances share
 // the same Map — module-level vars get separate instances per route bundle.
 type MemCase = Record<string, any>;
-declare global { var _fi_cases: Map<string, MemCase>; var _fi_audit: MemCase[]; var _fi_memory: MemCase[]; }
+declare global { var _fi_cases: Map<string, MemCase>; var _fi_audit: MemCase[]; var _fi_memory: MemCase[]; var _fi_seeded: boolean; }
 if (!global._fi_cases)  global._fi_cases  = new Map<string, MemCase>();
 if (!global._fi_audit)  global._fi_audit  = [];
 if (!global._fi_memory) global._fi_memory = [];
 const memCases  = global._fi_cases;
 const memAudit  = global._fi_audit;
 const memMemory = global._fi_memory;
+
+// Seed demo cases so the app looks populated out of the box
+if (!global._fi_seeded) {
+  global._fi_seeded = true;
+  const seed = (id: string, custId: string, accId: string, status: string, prob: number | null, verdict: string | null, report: any | null, createdAt: string) => {
+    memCases.set(id, { case_id: id, customer_id: custId, account_id: accId, status, fraud_probability: prob, report_json: report, analyst_verdict: verdict, analyst_notes: verdict ? "Reviewed and confirmed by senior analyst." : null, created_at: createdAt, resolved_at: verdict ? createdAt : null });
+  };
+  const r1 = { fraud_probability: 91, recommended_action: "ESCALATE_SAR", confidence: "HIGH", narrative: "This transaction exhibits strong indicators of offshore money laundering.\n• TXN-000412: Wire of $148,500 to an entity in a FATF high-risk jurisdiction with no prior relationship.\n• KYC-SANCTION-HIT: Partial name match against OFAC SDN list requires immediate escalation.\n• CASE-HIST-007: 92% similar to a confirmed MULE_ACCOUNT case resolved in 2023.\nEscalate to SAR filing — evidence meets the threshold for regulatory reporting.", evidence_citations: [{ evidence_id: "TXN-000412", source: "Transaction Analyzer", detail: "Offshore wire $148,500 to high-risk geography" }, { evidence_id: "KYC-SANCTION-HIT", source: "KYC Retriever", detail: "Partial OFAC SDN name match" }, { evidence_id: "CASE-HIST-007", source: "Fraud Case Memory (Qdrant)", detail: "MULE_ACCOUNT case, 92% similar, verdict=CONFIRMED_FRAUD" }] };
+  const r2 = { fraud_probability: 19, recommended_action: "CLEAR_FALSE_POSITIVE", confidence: "HIGH", narrative: "Flagged pattern is consistent with legitimate payroll activity.\n• TXN-BATCH-221: Three ACH transfers match the company's bi-weekly payroll cycle exactly.\n• KYC-EMP-VERIFY: Customer is a verified payroll administrator at a registered LLC.\n• CASE-HIST-019: 88% similar to a prior FALSE_POSITIVE payroll structuring case.\nClear as false positive — structuring flag does not apply to recurring payroll disbursements.", evidence_citations: [{ evidence_id: "TXN-BATCH-221", source: "Transaction Analyzer", detail: "ACH transfers match bi-weekly payroll schedule" }, { evidence_id: "KYC-EMP-VERIFY", source: "KYC Retriever", detail: "Verified payroll administrator, clean KYC" }, { evidence_id: "CASE-HIST-019", source: "Fraud Case Memory (Qdrant)", detail: "FALSE_POSITIVE payroll case, 88% similar, verdict=FALSE_POSITIVE" }] };
+  const r3 = { fraud_probability: 76, recommended_action: "CONFIRM_FRAUD", confidence: "HIGH", narrative: "Account takeover indicators are strong across multiple signals.\n• LOGIN-GEO-ANOMALY: First-ever login from Eastern Europe followed by immediate $47,000 wire within 4 minutes.\n• DEVICE-FINGERPRINT-NEW: Unknown device with no prior session history used for the transaction.\n• CASE-HIST-031: 87% similar to a confirmed account takeover case from Q1 2024.\nRecommend CONFIRM_FRAUD — velocity and geo-anomaly pattern is consistent with credential-stuffing ATO.", evidence_citations: [{ evidence_id: "LOGIN-GEO-ANOMALY", source: "KYC Retriever", detail: "Login from new geography 4 min before wire" }, { evidence_id: "DEVICE-FINGERPRINT-NEW", source: "Transaction Analyzer", detail: "Unknown device, no prior session history" }, { evidence_id: "CASE-HIST-031", source: "Fraud Case Memory (Qdrant)", detail: "ATO case, 87% similar, verdict=CONFIRMED_FRAUD" }] };
+  seed("CASE-DEMO-001", "CUST-1000", "ACC-5000", "CONFIRMED_FRAUD", 91, "CONFIRMED_FRAUD", r1, "2026-07-22T08:14:00.000Z");
+  seed("CASE-DEMO-002", "CUST-1004", "ACC-5004", "FALSE_POSITIVE",  19, "FALSE_POSITIVE",  r2, "2026-07-22T09:30:00.000Z");
+  seed("CASE-DEMO-003", "CUST-1015", "ACC-5015", "PENDING_REVIEW",  76, null,              r3, "2026-07-22T10:55:00.000Z");
+  // Seed audit entries for demo case 1
+  const hash = (s: string) => Array.from(s).reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(16).padStart(64, "0");
+  const auditEvents = [
+    { actor: "api_gateway", event_type: "ALERT_RECEIVED", correlation_id: "CASE-DEMO-001" },
+    { actor: "orchestrator", event_type: "DISPATCH_PLAN", correlation_id: "CASE-DEMO-001" },
+    { actor: "kyc_retriever_agent", event_type: "AGENT_CALL", correlation_id: "CASE-DEMO-001" },
+    { actor: "transaction_analyzer_agent", event_type: "AGENT_CALL", correlation_id: "CASE-DEMO-001" },
+    { actor: "fraud_case_search_agent", event_type: "AGENT_CALL", correlation_id: "CASE-DEMO-001" },
+    { actor: "report_generator_agent", event_type: "REPORT_FINALIZED", correlation_id: "CASE-DEMO-001" },
+    { actor: "api_gateway", event_type: "ANALYST_VERDICT", correlation_id: "CASE-DEMO-001" },
+  ];
+  let prevHash = "0".repeat(64);
+  auditEvents.forEach((e, i) => {
+    const entryHash = hash(prevHash + e.actor + e.event_type + i);
+    memAudit.push({ seq: i + 1, correlation_id: e.correlation_id, actor: e.actor, event_type: e.event_type, payload: { case_id: e.correlation_id }, prev_hash: prevHash, entry_hash: entryHash, created_at: "2026-07-22T08:14:00.000Z" });
+    prevHash = entryHash;
+  });
+}
 
 let initialized = false;
 
