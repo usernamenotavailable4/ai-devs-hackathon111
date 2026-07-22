@@ -11,6 +11,7 @@ export default function Page() {
   const [auditStatus, setAuditStatus] = useState<{ valid: boolean; detail: string } | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -174,7 +175,7 @@ export default function Page() {
           </div>
 
           {/* Cases */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          <div ref={sidebarRef} style={{ flex: 1, overflowY: "auto" }}>
             <CaseList cases={cases} onSelect={setSelectedCaseId} selectedCaseId={selectedCaseId} />
           </div>
         </aside>
@@ -182,7 +183,11 @@ export default function Page() {
         {/* Main content */}
         <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {selectedCaseId ? (
-            <CaseDetail caseId={selectedCaseId} onResolved={refresh} />
+            <CaseDetail caseId={selectedCaseId} onResolved={() => {
+              refresh();
+              setSelectedCaseId(null);
+              sidebarRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+            }} />
           ) : (
             <div style={{
               flex: 1, display: "flex", flexDirection: "column",
