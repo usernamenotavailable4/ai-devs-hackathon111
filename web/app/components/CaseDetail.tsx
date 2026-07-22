@@ -39,6 +39,13 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
+  // Auto-unlock if content doesn't need scrolling
+  useEffect(() => {
+    const el = evidenceRef.current;
+    if (!el) return;
+    if (el.scrollHeight <= el.clientHeight + 4) setScrolledToBottom(true);
+  });
+
   const onEvidenceScroll = () => {
     const el = evidenceRef.current;
     if (!el) return;
