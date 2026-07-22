@@ -48,8 +48,7 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
         verdict, notes,
         fraud_type: detail?.report_json?.recommended_action === "ESCALATE_SAR" ? "MULE_ACCOUNT" : undefined,
       });
-      onResolved();
-      load();
+      load(); // reload this case to get analyst_verdict set → shows completion screen
     } finally {
       setSubmitting(false);
     }
