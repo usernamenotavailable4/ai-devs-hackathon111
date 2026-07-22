@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #05080f;
+  --surface: #0b1120;
+  --surface-2: #111827;
+  --surface-3: #1a2540;
+  --border: #1e3058;
+  --border-dim: #162040;
+  --accent: #f59e0b;
+  --accent-dim: #451a03;
+  --danger: #ef4444;
+  --danger-dim: #450a0a;
+  --success: #10b981;
+  --success-dim: #022c22;
+  --info: #38bdf8;
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --muted-2: #94a3b8;
+}
+
+html, body {
+  background-color: var(--bg);
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Risk gauge */
+.risk-critical { color: #ef4444; }
+.risk-high { color: #f97316; }
+.risk-medium { color: #f59e0b; }
+.risk-low { color: #10b981; }
+
+.risk-bar-critical { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.risk-bar-high { background: linear-gradient(90deg, #f97316, #ea580c); }
+.risk-bar-medium { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.risk-bar-low { background: linear-gradient(90deg, #10b981, #059669); }

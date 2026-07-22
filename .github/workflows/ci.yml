@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-lint-and-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lint tools
+        run: pip install ruff
+      - name: Syntax-check all Python services
+        run: |
+          find services scripts -name "*.py" -print0 | xargs -0 -n1 python -m py_compile
+      - name: Ruff lint (non-blocking style check)
+        run: ruff check services scripts --exit-zero
+
+  frontend-typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npx tsc --noEmit
+
+  docker-compose-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose.yml
+        run: docker compose config -q

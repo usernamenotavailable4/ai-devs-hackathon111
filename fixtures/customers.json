@@ -1,0 +1,92 @@
+[
+  {
+    "customer_id": "CUST-1000",
+    "account_id": "ACC-5000",
+    "name": "Customer 0",
+    "home_geography": "NG"
+  },
+  {
+    "customer_id": "CUST-1001",
+    "account_id": "ACC-5001",
+    "name": "Customer 1",
+    "home_geography": "IN"
+  },
+  {
+    "customer_id": "CUST-1002",
+    "account_id": "ACC-5002",
+    "name": "Customer 2",
+    "home_geography": "RU"
+  },
+  {
+    "customer_id": "CUST-1003",
+    "account_id": "ACC-5003",
+    "name": "Customer 3",
+    "home_geography": "US"
+  },
+  {
+    "customer_id": "CUST-1004",
+    "account_id": "ACC-5004",
+    "name": "Customer 4",
+    "home_geography": "UK"
+  },
+  {
+    "customer_id": "CUST-1005",
+    "account_id": "ACC-5005",
+    "name": "Customer 5",
+    "home_geography": "UK"
+  },
+  {
+    "customer_id": "CUST-1006",
+    "account_id": "ACC-5006",
+    "name": "Customer 6",
+    "home_geography": "NG"
+  },
+  {
+    "customer_id": "CUST-1007",
+    "account_id": "ACC-5007",
+    "name": "Customer 7",
+    "home_geography": "US"
+  },
+  {
+    "customer_id": "CUST-1008",
+    "account_id": "ACC-5008",
+    "name": "Customer 8",
+    "home_geography": "AE"
+  },
+  {
+    "customer_id": "CUST-1009",
+    "account_id": "ACC-5009",
+    "name": "Customer 9",
+    "home_geography": "US"
+  },
+  {
+    "customer_id": "CUST-1010",
+    "account_id": "ACC-5010",
+    "name": "Customer 10",
+    "home_geography": "UK"
+  },
+  {
+    "customer_id": "CUST-1011",
+    "account_id": "ACC-5011",
+    "name": "Customer 11",
+    "home_geography": "RU"
+  },
+  {
+    "customer_id": "CUST-1012",
+    "account_id": "ACC-5012",
+    "name": "Customer 12",
+    "home_geography": "RU"
+  },
+  {
+    "customer_id": "CUST-1013",
+    "account_id": "ACC-5013",
+    "name": "Customer 13",
+    "home_geography": "UK"
+  },
+  {
+    "customer_id": "CUST-1014",
+    "account_id": "ACC-5014",
+    "name": "Customer 14",
+    "home_geography": "AE"
+  }
+]
