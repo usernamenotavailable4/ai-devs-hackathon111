@@ -10,6 +10,19 @@ export default function Page() {
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [auditStatus, setAuditStatus] = useState<{ valid: boolean; detail: string } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") { setIsDark(true); document.documentElement.classList.add("dark"); }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
 
   const refresh = () => {
     api.listCases().then((r) => setCases(r.cases)).catch(() => {});
@@ -50,6 +63,7 @@ export default function Page() {
         alignItems: "center",
         justifyContent: "space-between",
         flexShrink: 0,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           {/* Logo mark */}
@@ -61,7 +75,7 @@ export default function Page() {
             flexShrink: 0,
           }}>HM</div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: "15px", letterSpacing: "-0.01em", color: "#f1f5f9" }}>
+            <div style={{ fontWeight: 700, fontSize: "15px", letterSpacing: "-0.01em", color: "var(--text)" }}>
               Harshad Mehta <span style={{ color: "var(--accent)" }}>AI</span>
             </div>
             <div style={{ fontSize: "11px", color: "var(--muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
@@ -72,12 +86,12 @@ export default function Page() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {/* Live indicator */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <div style={{
-              width: "6px", height: "6px", borderRadius: "50%", background: "var(--success)",
-              boxShadow: "0 0 6px var(--success)",
-            }} />
-            <span style={{ fontSize: "11px", color: "var(--muted-2)" }}>LIVE</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px",
+            padding: "4px 10px", borderRadius: "20px",
+            background: "#d1fae5", border: "1px solid #a7f3d0",
+          }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981" }} />
+            <span style={{ fontSize: "11px", color: "#065f46", fontWeight: 500 }}>LIVE</span>
           </div>
 
           <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
@@ -98,14 +112,30 @@ export default function Page() {
             style={{
               fontSize: "12px", padding: "6px 14px",
               border: "1px solid var(--border)", borderRadius: "6px",
-              background: "transparent", color: "var(--muted-2)", cursor: "pointer",
-              transition: "all 0.15s",
+              background: "var(--surface-2)", color: "var(--muted)", cursor: "pointer",
+              transition: "all 0.15s", fontWeight: 500,
               opacity: verifying ? 0.5 : 1,
+            }}
+            onMouseEnter={e => { (e.currentTarget.style.borderColor = "var(--accent)"); (e.currentTarget.style.color = "var(--text)"); }}
+            onMouseLeave={e => { (e.currentTarget.style.borderColor = "var(--border)"); (e.currentTarget.style.color = "var(--muted)"); }}
+          >
+            {verifying ? "Verifying…" : "Verify Audit Chain"}
+          </button>
+
+          <button
+            onClick={toggleTheme}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            style={{
+              width: "34px", height: "34px", borderRadius: "8px",
+              border: "1px solid var(--border)", background: "var(--surface-2)",
+              cursor: "pointer", fontSize: "16px", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              transition: "all 0.15s",
             }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--accent)")}
             onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--border)")}
           >
-            {verifying ? "Verifying…" : "Verify Audit Chain"}
+            {isDark ? "☀️" : "🌙"}
           </button>
         </div>
       </header>
@@ -116,7 +146,7 @@ export default function Page() {
         <aside style={{
           width: "360px", flexShrink: 0,
           borderRight: "1px solid var(--border)",
-          background: "var(--surface)",
+          background: "var(--surface-2)",
           display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}>

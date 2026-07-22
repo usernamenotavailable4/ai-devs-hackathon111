@@ -5,6 +5,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --surface-3: #f3f4f6;
+  --border: #e5e7eb;
+  --border-dim: #f0f1f3;
+  --accent: #f59e0b;
+  --accent-dim: #fef3c7;
+  --danger: #ef4444;
+  --danger-dim: #fee2e2;
+  --success: #10b981;
+  --success-dim: #d1fae5;
+  --info: #3b82f6;
+  --text: #111827;
+  --muted: #6b7280;
+  --muted-2: #9ca3af;
+}
+
+/* Dark mode overrides */
+html.dark {
   --bg: #05080f;
   --surface: #0b1120;
   --surface-2: #111827;
@@ -39,14 +59,19 @@ html, body {
   height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
+  background: var(--muted-2);
+}
+
+/* Card shadow utility */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
 }
 
 /* Risk gauge */

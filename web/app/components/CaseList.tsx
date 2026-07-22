@@ -44,14 +44,15 @@ export default function CaseList({
             key={c.case_id}
             onClick={() => onSelect(c.case_id)}
             style={{
-              padding: "12px", borderRadius: "8px", cursor: "pointer",
-              border: `1px solid ${active ? "var(--accent)" : "transparent"}`,
-              background: active ? "rgba(245,158,11,0.07)" : "transparent",
+              padding: "12px", borderRadius: "10px", cursor: "pointer",
+              border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+              background: active ? "#fffbeb" : "var(--surface)",
               transition: "all 0.12s",
               position: "relative", overflow: "hidden",
+              boxShadow: active ? "0 0 0 2px rgba(245,158,11,0.15)" : "0 1px 3px rgba(0,0,0,0.05)",
             }}
-            onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; }}
-            onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--muted-2)"; } }}
+            onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; } }}
           >
             {/* Left accent bar */}
             {active && (

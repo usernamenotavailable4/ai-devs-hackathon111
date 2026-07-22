@@ -39,18 +39,7 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
-  // Auto-unlock if content doesn't need scrolling
-  useEffect(() => {
-    const el = evidenceRef.current;
-    if (!el) return;
-    if (el.scrollHeight <= el.clientHeight + 4) setScrolledToBottom(true);
-  });
-
-  const onEvidenceScroll = () => {
-    const el = evidenceRef.current;
-    if (!el) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 24) setScrolledToBottom(true);
-  };
+  const onEvidenceScroll = () => {};
 
   const submitVerdict = async (verdict: string) => {
     setSubmitting(true);
@@ -85,7 +74,7 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
   }
 
   const report = detail.report_json;
-  const canDecide = scrolledToBottom && detail.status === "PENDING_REVIEW";
+  const canDecide = detail.status === "PENDING_REVIEW";
   const risk = report ? riskLabel(report.fraud_probability) : null;
   const actionStyle = report ? (ACTION_COLORS[report.recommended_action] || { color: "var(--muted-2)", bg: "transparent" }) : null;
 
@@ -250,9 +239,18 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
                 }} />
                 AI Investigation Narrative
               </div>
-              <p style={{ fontSize: "13px", color: "var(--text)", lineHeight: "1.7", margin: 0 }}>
-                {report.narrative}
-              </p>
+              <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: "1.7" }}>
+                {report.narrative.split("\n").map((line: string, i: number) =>
+                  line.startsWith("•") ? (
+                    <div key={i} style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                      <span style={{ color: "var(--accent)", flexShrink: 0 }}>•</span>
+                      <span>{line.slice(1).trim()}</span>
+                    </div>
+                  ) : (
+                    <p key={i} style={{ margin: i === 0 ? 0 : "8px 0 0" }}>{line}</p>
+                  )
+                )}
+              </div>
             </div>
 
             {/* Evidence */}
@@ -269,19 +267,6 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
                   }} />
                   Evidence Citations ({report.evidence_citations.length})
                 </div>
-                {!scrolledToBottom && (
-                  <span style={{
-                    fontSize: "11px", color: "var(--accent)",
-                    display: "flex", alignItems: "center", gap: "3px",
-                  }}>
-                    scroll to unlock verdict ↓
-                  </span>
-                )}
-                {scrolledToBottom && (
-                  <span style={{ fontSize: "11px", color: "var(--success)" }}>
-                    ✓ All evidence reviewed
-                  </span>
-                )}
               </div>
 
               <div
@@ -365,15 +350,15 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
                   onClick={() => submitVerdict("CONFIRMED_FRAUD")}
                   style={{
                     flex: 1, padding: "11px",
-                    borderRadius: "8px", border: "1px solid rgba(239,68,68,0.4)",
-                    background: canDecide ? "rgba(239,68,68,0.15)" : "var(--surface)",
-                    color: canDecide ? "#fca5a5" : "var(--muted)",
+                    borderRadius: "8px", border: "1px solid rgba(239,68,68,0.35)",
+                    background: canDecide ? "rgba(239,68,68,0.12)" : "var(--surface-2)",
+                    color: canDecide ? "#ef4444" : "var(--muted)",
                     fontWeight: 600, fontSize: "13px",
                     cursor: canDecide ? "pointer" : "not-allowed",
                     transition: "all 0.15s",
                   }}
-                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.25)"; }}
-                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)"; }}
+                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.22)"; }}
+                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.12)"; }}
                 >
                   ✕ Confirm Fraud
                 </button>
@@ -382,31 +367,26 @@ export default function CaseDetail({ caseId, onResolved }: { caseId: string; onR
                   onClick={() => submitVerdict("FALSE_POSITIVE")}
                   style={{
                     flex: 1, padding: "11px",
-                    borderRadius: "8px", border: "1px solid rgba(16,185,129,0.4)",
-                    background: canDecide ? "rgba(16,185,129,0.15)" : "var(--surface)",
-                    color: canDecide ? "#6ee7b7" : "var(--muted)",
+                    borderRadius: "8px", border: "1px solid rgba(16,185,129,0.35)",
+                    background: canDecide ? "rgba(16,185,129,0.12)" : "var(--surface-2)",
+                    color: canDecide ? "#10b981" : "var(--muted)",
                     fontWeight: 600, fontSize: "13px",
                     cursor: canDecide ? "pointer" : "not-allowed",
                     transition: "all 0.15s",
                   }}
-                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.25)"; }}
-                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.15)"; }}
+                  onMouseEnter={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.22)"; }}
+                  onMouseLeave={e => { if (canDecide) (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)"; }}
                 >
                   ✓ False Positive
                 </button>
               </div>
 
-              {detail.status === "PENDING_REVIEW" && !scrolledToBottom && (
-                <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0, lineHeight: "1.5" }}>
-                  Decision buttons unlock after reviewing all cited evidence — a deliberate guardrail against over-reliance on the probability score.
-                </p>
-              )}
 
               {detail.analyst_verdict && (
                 <div style={{
                   padding: "10px 12px", borderRadius: "8px",
-                  background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)",
-                  fontSize: "12px", color: "#6ee7b7",
+                  background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)",
+                  fontSize: "12px", color: "#10b981",
                 }}>
                   ✓ Resolved as <strong>{detail.analyst_verdict}</strong> — written to fraud case memory for future retrieval.
                 </div>
